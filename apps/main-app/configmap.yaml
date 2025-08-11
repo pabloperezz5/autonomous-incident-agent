@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: main-app-config
+  namespace: incident-analysis
+  labels:
+    app: main-app
+    component: orchestrator
+data:
+  # MCP Server URLs - internal cluster communication
+  grafana_mcp_url: "http://grafana-mcp-service.incident-analysis.svc.cluster.local:8080"
+  opsgenie_mcp_url: "http://opsgenie-mcp-service.incident-analysis.svc.cluster.local:8080"
+  
+  # Application settings
+  max_analysis_timeout: "300"  # 5 minutes
+  max_tool_calls: "20"
+  
+  # Health check settings
+  health_check_timeout: "10"
+  
+  # Claude API settings (non-sensitive)
+  claude_model: "claude-3-sonnet-20240229"
+  claude_max_tokens: "4000"

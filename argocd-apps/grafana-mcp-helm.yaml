@@ -1,0 +1,131 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: incident-analysis-grafana-mcp
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: incident-analysis-agent
+    app.kubernetes.io/component: grafana-mcp
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: mcp-server
+    targetRevision: "1.0.0"  # Use latest stable version
+    helm:
+      releaseName: grafana-mcp
+      values: |
+        # Service configuration
+        service:
+          type: ClusterIP
+          port: 8080
+          name: grafana-mcp-service
+        
+        # Pod configuration
+        replicaCount: 2
+        
+        image:
+          repository: grafana/mcp-server
+          tag: "latest"
+          pullPolicy: Always
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Environment variables
+        env:
+          - name: PORT
+            value: "8080"
+          - name: GRAFANA_URL
+            value: "https://your-grafana-instance.com"
+          - name: GRAFANA_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: grafana-secret
+                key: api_token
+          - name: LOG_LEVEL
+            value: "info"
+          - name: MCP_TRANSPORT
+            value: "http"
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 1000
+        
+        # Pod disruption budget
+        podDisruptionBudget:
+          enabled: true
+          minAvailable: 1
+        
+        # Horizontal Pod Autoscaler
+        autoscaling:
+          enabled: true
+          minReplicas: 2
+          maxReplicas: 5
+          targetCPUUtilizationPercentage: 70
+          targetMemoryUtilizationPercentage: 80
+        
+        # Labels and annotations
+        labels:
+          app.kubernetes.io/name: incident-analysis-agent
+          app.kubernetes.io/component: grafana-mcp
+          app.kubernetes.io/version: "1.0.0"
+        
+        # Service account
+        serviceAccount:
+          create: false
+          name: incident-analysis-sa
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: incident-analysis
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  revisionHistoryLimit: 10
+  
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas

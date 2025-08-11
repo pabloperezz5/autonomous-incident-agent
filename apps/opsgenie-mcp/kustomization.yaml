@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: incident-analysis
+
+resources:
+- deployment.yaml
+- service.yaml
+- configmap.yaml
+
+commonLabels:
+  app.kubernetes.io/name: incident-analysis-agent
+  app.kubernetes.io/component: opsgenie-mcp
+  app.kubernetes.io/version: "1.0.0"
+
+images:
+- name: your-registry/opsgenie-mcp-server
+  newTag: latest

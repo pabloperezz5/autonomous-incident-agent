@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opsgenie-mcp
+  namespace: incident-analysis
+  labels:
+    app: opsgenie-mcp
+    component: mcp-server
+    app.kubernetes.io/part-of: incident-analysis
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: opsgenie-mcp
+  template:
+    metadata:
+      labels:
+        app: opsgenie-mcp
+        component: mcp-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: opsgenie-mcp
+        image: your-registry/opsgenie-mcp-server:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8080"
+        - name: OPSGENIE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: opsgenie-secret
+              key: api_key
+        - name: LOG_LEVEL
+          value: "info"
+        - name: MCP_TRANSPORT
+          value: "http"
+        - name: OPSGENIE_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: opsgenie-mcp-config
+              key: opsgenie_api_url
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

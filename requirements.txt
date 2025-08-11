@@ -1,0 +1,30 @@
+# Main application dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP client for API calls and MCP communication
+aiohttp==3.9.1
+
+# Anthropic Claude API
+anthropic==0.7.8
+
+# JSON handling and utilities
+pydantic==2.5.0
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# Date/time utilities
+python-dateutil==2.8.2
+
+# Async utilities
+asyncio-throttle==1.0.2
+
+# Optional: Prometheus metrics (if monitoring needed)
+prometheus-client==0.19.0
+
+# Optional: Health check utilities
+httpx==0.25.2

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opsgenie-mcp-service
+  namespace: incident-analysis
+  labels:
+    app: opsgenie-mcp
+    component: mcp-server
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: opsgenie-mcp

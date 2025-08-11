@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opsgenie-mcp-config
+  namespace: incident-analysis
+  labels:
+    app: opsgenie-mcp
+    component: mcp-server
+    app.kubernetes.io/name: incident-analysis-agent
+    app.kubernetes.io/component: opsgenie-mcp
+data:
+  # OpsGenie API configuration
+  opsgenie_api_url: "https://api.opsgenie.com/v2"
+  
+  # API settings
+  timeout: "30"
+  max_retries: "3"
+  rate_limit_per_minute: "60"
+  
+  # MCP server settings
+  mcp_protocol_version: "2024-11-05"
+  max_concurrent_requests: "10"
+  
+  # Logging configuration
+  log_level: "info"
+  log_format: "json"
